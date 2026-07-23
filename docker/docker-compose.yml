@@ -1,0 +1,65 @@
+services:
+
+  # emlid:
+  #   build:
+  #     context: ..
+  #     dockerfile: docker/emlid/Dockerfile
+  #   image: ros2_emlid_driver:latest
+  #   container_name: emlid
+  #   privileged: true
+  #   network_mode: host
+  #   volumes:
+  #     - /dev/:/dev/
+  #     - ../ros2_ws:/ros2_ws
+  #     - ../shared/:/shared/
+  #     - ../config/emlid/nmea_serial_driver.py:/ros2_ws/src/nmea_navsat_driver/src/libnmea_navsat_driver/nodes/nmea_serial_driver.py:rw
+  #     - ../config/emlid/nmea_serial_driver.yaml:/ros2_ws/src/nmea_navsat_driver/config/nmea_serial_driver.yaml:rw
+  #   environment:
+  #     - ROS_DOMAIN_ID=30
+  #     - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+  #     - CYCLONEDDS_URI=file:///shared/cyclonedds-config.xml
+  #   command:
+  #     - bash
+  #     - -c
+  #     - |
+  #       echo "=== Starting EMLID driver ==="
+  #       colcon build --symlink-install --packages-select nmea_navsat_driver --cmake-args -DCMAKE_BUILD_TYPE=Release
+  #       source /ros2_ws/install/setup.bash
+  #       ros2 run nmea_navsat_driver nmea_serial_driver
+
+  curtmini:
+    build:
+      context: ..
+      dockerfile: docker/curtmini/Dockerfile
+    image: ros2_curtmini_driver:latest
+    container_name: curtmini
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ../ros2_ws:/ros2_ws
+      - ../shared/:/shared/
+      - ../config/curtmini:/config/curtmini
+      - /dev:/dev:rw,rslave
+    environment:
+      - ROS_DOMAIN_ID=30
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    command:
+      - bash
+      - -c
+      - |
+        echo "=== Starting CURTMINI driver ==="
+        colcon build --symlink-install --packages-select candle_ros2 curt_mini ipa_ros2_control openzen_driver --cmake-args -DCMAKE_BUILD_TYPE=Release
+        source /ros2_ws/install/setup.bash
+        ros2 launch curt_mini robot_base.launch.py
+  
+  # ros2 launch twist_mux twist_mux_launch.py config_locks:=/config/curtmini/twist_mux.yaml config_topics:=/config/curtmini/twist_mux.yaml cmd_vel_out:=/cmd_vel &
+
+  # # 4. Infinite Joystick Hot-Plug Loop
+  # while true; do
+  #   if [ -c /dev/input/js0 ]; then
+  #     chmod a+rw /dev/input/js0 || true
+  #     ros2 launch /shared/teleop_bringup.launch.py
+  #   fi
+  #   sleep 3
+  # done
