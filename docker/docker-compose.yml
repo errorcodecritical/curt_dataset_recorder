@@ -39,7 +39,9 @@ services:
     volumes:
       - ../ros2_ws:/ros2_ws
       - ../shared/:/shared/
-      - ../config/curtmini:/config/curtmini
+      - ../config/:/config/
+      - ../config/curtmini/joystick.yaml:/ros2_ws/src/curt_mini/config/joystick.yaml
+      - ../config/curtmini/twist_mux.yaml:/ros2_ws/src/curt_mini/config/twist_mux.yaml
       - /dev:/dev:rw,rslave
     environment:
       - ROS_DOMAIN_ID=30
