@@ -53,6 +53,15 @@ services:
         echo "=== Starting CURTMINI driver ==="
         colcon build --symlink-install --packages-select candle_ros2 curt_mini ipa_ros2_control openzen_driver --cmake-args -DCMAKE_BUILD_TYPE=Release
         source /ros2_ws/install/setup.bash
+
+        # 1. Wait quietly until the CAN interface appears, then configure it
+        until ip link show can0 >/dev/null 2>&1; do sleep 2; done
+        ip link set can0 down || true
+        ip link set can0 up type can bitrate 500000
+
+        # 2. Crash out if the CAN configuration fails to initialize
+        ip link show can0 | grep -q "UP" || { echo "CAN interface failed"; exit 1; }
+
         ros2 launch curt_mini robot_base.launch.py
   
   # ros2 launch twist_mux twist_mux_launch.py config_locks:=/config/curtmini/twist_mux.yaml config_topics:=/config/curtmini/twist_mux.yaml cmd_vel_out:=/cmd_vel &
